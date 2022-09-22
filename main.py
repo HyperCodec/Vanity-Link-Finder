@@ -1,20 +1,24 @@
-import json, requests, itertools, time, settings
+import json, requests, itertools, settings
 from requests import RequestException
+from multiprocessing import Pool
 
 existinglinks = []
 chars = "abcdefghigjklmnopqrstuvwxyz!$&-_=+,1234567890"
 
 proxycycle = itertools.cycle(settings.proxies)
 
-for length in range(1, 17):
+
+def get_vanities(length: int):
     for link in itertools.product(chars, repeat=length):
         link = ''.join(link)
         proxy = next(proxycycle)
 
         try:
-            response = requests.get(f"https://discordapp.com/api/invites/{link}", allow_redirects=True, proxies={"http": proxy, "https": proxy})
+            response = requests.get(f"https://discordapp.com/api/invites/{link}", allow_redirects=True,
+                                    proxies={"http": proxy, "https": proxy})
 
-            print(f"Connected to https://discordapp.com/api/invites/{link} with status code {response.status_code} ({response.elapsed})")
+            print(
+                f"Connected to https://discordapp.com/api/invites/{link} with status code {response.status_code} ({response.elapsed})")
 
             if response.status_code == 200:
                 print(f"discord.gg/{link} is valid")
@@ -24,7 +28,10 @@ for length in range(1, 17):
         except RequestException:
             print(f"Failed to connect to http://discord.gg/{link}")
 
-        time.sleep(2)
+
+for length in range(1, 17):
+    pool = Pool()
+    pool.map(get_vanities, [length])
 
 print("Saving...")
 
